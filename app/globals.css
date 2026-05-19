@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #1c1f24;
+  background: #f6f2ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #f6f2ea;
+  color: #1c1f24;
+  font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 300px;
+  min-height: 100vh;
+}
+
+.side-nav,
+.guess-panel {
+  padding: 24px;
+  background: #fffaf1;
+  border-color: #e4dac9;
+}
+
+.side-nav {
+  border-right: 1px solid #e4dac9;
+}
+
+.guess-panel {
+  border-left: 1px solid #e4dac9;
+}
+
+.side-nav h1 {
+  margin: 0 0 28px;
+  font-size: 28px;
+}
+
+.nav-item {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 10px;
+  border: 1px solid #d8ccba;
+  border-radius: 8px;
+  background: #fff;
+  color: #24262b;
+  cursor: pointer;
+}
+
+.nav-item:disabled {
+  color: #918879;
+  cursor: not-allowed;
+}
+
+.nav-item-active {
+  background: #243b53;
+  border-color: #243b53;
+  color: #fff;
+}
+
+.lyrics-panel {
+  min-width: 0;
+  padding: 24px clamp(18px, 4vw, 48px);
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .side-nav,
+  .guess-panel {
+    border: 0;
+    border-bottom: 1px solid #e4dac9;
+  }
+}
