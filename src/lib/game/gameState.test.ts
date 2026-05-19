@@ -84,4 +84,68 @@ describe("game state", () => {
     expect(state.guessCount).toBe(3)
     expect(state.isSolved).toBe(true)
   })
+
+  it("normalizes decomposed guesses against precomposed title text", () => {
+    const accentSong: Song = {
+      ...song,
+      title: "é",
+      lyrics: ["cafe\u0301"],
+    }
+
+    const state = applyGuess(accentSong, createInitialGameState(accentSong), "e\u0301")
+
+    expect(state.revealedChars).toEqual(["é"])
+    expect(state.missedChars).toEqual([])
+    expect(state.guessedChars).toEqual(["é"])
+    expect(state.guessCount).toBe(1)
+    expect(state.isSolved).toBe(true)
+  })
+
+  it("normalizes full-width digits for guesses", () => {
+    const digitSong: Song = {
+      ...song,
+      title: "１２3",
+      lyrics: ["digits 456"],
+    }
+
+    const state = applyGuess(digitSong, createInitialGameState(digitSong), "123４５６")
+
+    expect(state.revealedChars).toEqual(["1", "2", "3", "4", "5", "6"])
+    expect(state.guessCount).toBe(6)
+    expect(state.isSolved).toBe(true)
+  })
+
+  it("counts duplicate normalized guesses once", () => {
+    const duplicateSong: Song = {
+      ...song,
+      title: "a",
+      lyrics: [],
+    }
+
+    const state = applyGuess(duplicateSong, createInitialGameState(duplicateSong), "aＡ")
+
+    expect(state.guessedChars).toEqual(["a"])
+    expect(state.revealedChars).toEqual(["a"])
+    expect(state.guessCount).toBe(1)
+    expect(state.isSolved).toBe(true)
+  })
+
+  it("does not mutate previous state arrays when applying guesses", () => {
+    const previous = applyGuess(song, createInitialGameState(song), "天")
+    const previousRevealed = previous.revealedChars
+    const previousMissed = previous.missedChars
+    const previousGuessed = previous.guessedChars
+
+    const next = applyGuess(song, previous, "海花")
+
+    expect(previous.revealedChars).toEqual(["天"])
+    expect(previous.missedChars).toEqual([])
+    expect(previous.guessedChars).toEqual(["天"])
+    expect(next.revealedChars).toEqual(["天", "花"])
+    expect(next.missedChars).toEqual(["海"])
+    expect(next.guessedChars).toEqual(["天", "海", "花"])
+    expect(next.revealedChars).not.toBe(previousRevealed)
+    expect(next.missedChars).not.toBe(previousMissed)
+    expect(next.guessedChars).not.toBe(previousGuessed)
+  })
 })
