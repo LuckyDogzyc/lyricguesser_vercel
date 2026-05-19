@@ -56,4 +56,20 @@ describe("writeIngestionResult", () => {
     expect(readFileSync(join(pendingDir, "task.json"), "utf8")).toContain("\"pending\"")
     expect(readFileSync(join(reviewDir, "task.md"), "utf8")).toContain("pending")
   })
+
+  it("rejects duplicate song ids anywhere in one ingestion batch", () => {
+    const dir = mkdtempSync(join(tmpdir(), "lyric-ingest-"))
+    const catalogPath = join(dir, "songs.json")
+    writeFileSync(catalogPath, "[]")
+
+    expect(() =>
+      writeIngestionResult({
+        taskId: "task",
+        songs: [makeSong("same-id", 0.7), makeSong("same-id", 0.6)],
+        catalogPath,
+        pendingDir: join(dir, "pending"),
+        reviewDir: join(dir, "review"),
+      })
+    ).toThrow("Duplicate song id: same-id")
+  })
 })

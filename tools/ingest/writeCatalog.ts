@@ -22,15 +22,16 @@ export function writeIngestionResult(input: WriteIngestionInput): WriteIngestion
   mkdirSync(input.reviewDir, { recursive: true })
 
   const existing = JSON.parse(readFileSync(input.catalogPath, "utf8")) as Song[]
-  const existingIds = new Set(existing.map((song) => song.id))
+  const seenIds = new Set(existing.map((song) => song.id))
   const approved: Song[] = []
   const pending: Song[] = []
   let skipped = 0
 
   for (const song of input.songs) {
-    if (existingIds.has(song.id) || approved.some((approvedSong) => approvedSong.id === song.id)) {
+    if (seenIds.has(song.id)) {
       throw new Error(`Duplicate song id: ${song.id}`)
     }
+    seenIds.add(song.id)
 
     const bucket = getConfidenceBucket(song.confidence.overall)
     if (bucket === "approved") {
