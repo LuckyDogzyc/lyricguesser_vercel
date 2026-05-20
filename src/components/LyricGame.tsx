@@ -5,13 +5,15 @@ import type { Song } from "@/src/lib/catalog/song"
 import { getArtistCategories, getRandomEligibleSongs, getSongsForCategory } from "@/src/lib/catalog/songs"
 import { isGuessableChar, normalizeGuessChar } from "@/src/lib/game/characters"
 import { applyGuess, applyHint, createInitialGameState, getPuzzleLines } from "@/src/lib/game/gameState"
+import type { SongCategory } from "@/src/lib/catalog/songs"
 
 type LyricGameProps = {
   initialSong: Song
   songs: Song[]
+  artistCategories?: SongCategory[]
 }
 
-export function LyricGame({ initialSong, songs }: LyricGameProps) {
+export function LyricGame({ initialSong, songs, artistCategories: providedArtistCategories }: LyricGameProps) {
   const [song, setSong] = useState(initialSong)
   const [state, setState] = useState(() => createInitialGameState(initialSong))
   const [input, setInput] = useState("")
@@ -19,7 +21,7 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
   const [artistSearch, setArtistSearch] = useState("")
   const puzzleLines = useMemo(() => getPuzzleLines(song), [song])
   const randomSongs = useMemo(() => getRandomEligibleSongs(songs), [songs])
-  const artistCategories = useMemo(() => getArtistCategories(songs), [songs])
+  const artistCategories = useMemo(() => providedArtistCategories ?? getArtistCategories(songs), [providedArtistCategories, songs])
   const visibleArtists = useMemo(() => {
     const keyword = artistSearch.trim().toLocaleLowerCase("zh-CN")
     if (keyword.length === 0) {
@@ -47,11 +49,18 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
     startSong(pickRandomSong(pool, song) ?? initialSong)
   }
 
-  function startCategory(categoryId: string) {
+  async function startCategory(categoryId: string) {
     const categorySongs = getSongsForCategory(categoryId, songs)
     const next = pickRandomSong(categorySongs, song)
     if (next) {
       startSong(next)
+      return
+    }
+
+    const response = await fetch(`/api/category-song?categoryId=${encodeURIComponent(categoryId)}`)
+    if (response.ok) {
+      const remoteSong = (await response.json()) as Song
+      startSong(remoteSong)
     }
   }
 

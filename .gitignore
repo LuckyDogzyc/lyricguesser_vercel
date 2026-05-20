@@ -38,6 +38,7 @@ yarn-error.log*
 .env.*.local
 !.env.example
 !.env.*.example
+content/lyrics/*.local.json
 
 # vercel
 .vercel

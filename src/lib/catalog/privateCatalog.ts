@@ -1,0 +1,38 @@
+import "server-only"
+
+import { existsSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+import type { Song } from "./song"
+import type { SongCategory } from "./songs"
+import { getArtistCategories, getSongsForCategory } from "./songs"
+
+const privateCatalogPath = join(process.cwd(), "content", "lyrics", "songs.local.json")
+
+let cachedSongs: Song[] | null = null
+
+export function getPrivateSongs(): Song[] {
+  if (cachedSongs) {
+    return cachedSongs
+  }
+
+  if (!existsSync(privateCatalogPath)) {
+    cachedSongs = []
+    return cachedSongs
+  }
+
+  cachedSongs = JSON.parse(readFileSync(privateCatalogPath, "utf8")) as Song[]
+  return cachedSongs
+}
+
+export function getPrivateArtistCategories(minimumSongCount = 4): SongCategory[] {
+  return getArtistCategories(getPrivateSongs(), minimumSongCount)
+}
+
+export function getPrivateSongForCategory(categoryId: string): Song | null {
+  const songs = getSongsForCategory(categoryId, getPrivateSongs())
+  if (songs.length === 0) {
+    return null
+  }
+
+  return songs[Math.floor(Math.random() * songs.length)] ?? songs[0]
+}
