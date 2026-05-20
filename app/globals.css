@@ -305,16 +305,14 @@ input {
   }
 
   .app-shell {
-    display: block;
+    display: flex;
+    flex-direction: column;
     height: 100dvh;
     min-height: 0;
   }
 
   .side-nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     z-index: 20;
     padding: 6px 10px;
     background: rgba(255, 250, 241, 0.96);
@@ -327,20 +325,30 @@ input {
   }
 
   .mobile-mode-toggle {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     min-height: 32px;
-    min-width: 58px;
+    width: 100%;
     border: 1px solid #d8ccba;
     border-radius: 8px;
+    padding: 0 10px;
     background: #fff;
     color: #24262b;
   }
 
+  .mobile-mode-toggle::after {
+    content: "⌄";
+    font-size: 14px;
+  }
+
+  .side-nav-open .mobile-mode-toggle::after {
+    content: "⌃";
+  }
+
   .nav-items {
     display: none;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     margin-top: 6px;
   }
@@ -359,9 +367,11 @@ input {
   }
 
   .lyrics-panel {
-    height: 100dvh;
+    flex: 1;
+    height: auto;
     max-height: none;
-    padding: 48px 10px 104px;
+    min-height: 0;
+    padding: 8px 10px 104px;
     overflow-y: auto;
   }
 
