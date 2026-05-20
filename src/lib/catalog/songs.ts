@@ -60,6 +60,12 @@ export function getCatalogCategories(songs: Song[] = getPlayableSongs()): SongCa
   })
 }
 
+export function getArtistCategories(songs: Song[] = getPlayableSongs(), minimumSongCount = 4): SongCategory[] {
+  return getCatalogCategories(songs).filter(
+    (category) => category.type === "artist" && category.songCount > minimumSongCount,
+  )
+}
+
 export function getSongsForCategory(categoryId: string, songs: Song[] = getPlayableSongs()): Song[] {
   return getPlayableSongs(songs).filter((song) =>
     getSongCategories(song).includes(categoryId),

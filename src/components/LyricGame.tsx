@@ -2,9 +2,9 @@
 
 import React, { FormEvent, useMemo, useState } from "react"
 import type { Song } from "@/src/lib/catalog/song"
-import { getCatalogCategories, getRandomEligibleSongs, getSongsForCategory } from "@/src/lib/catalog/songs"
+import { getArtistCategories, getRandomEligibleSongs, getSongsForCategory } from "@/src/lib/catalog/songs"
 import { isGuessableChar, normalizeGuessChar } from "@/src/lib/game/characters"
-import { applyGuess, createInitialGameState, getPuzzleLines } from "@/src/lib/game/gameState"
+import { applyGuess, applyHint, createInitialGameState, getPuzzleLines } from "@/src/lib/game/gameState"
 
 type LyricGameProps = {
   initialSong: Song
@@ -15,9 +15,19 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
   const [song, setSong] = useState(initialSong)
   const [state, setState] = useState(() => createInitialGameState(initialSong))
   const [input, setInput] = useState("")
+  const [mode, setMode] = useState<"play" | "artists">("play")
+  const [artistSearch, setArtistSearch] = useState("")
   const puzzleLines = useMemo(() => getPuzzleLines(song), [song])
   const randomSongs = useMemo(() => getRandomEligibleSongs(songs), [songs])
-  const categories = useMemo(() => getCatalogCategories(songs), [songs])
+  const artistCategories = useMemo(() => getArtistCategories(songs), [songs])
+  const visibleArtists = useMemo(() => {
+    const keyword = artistSearch.trim().toLocaleLowerCase("zh-CN")
+    if (keyword.length === 0) {
+      return artistCategories
+    }
+
+    return artistCategories.filter((artist) => artist.label.toLocaleLowerCase("zh-CN").includes(keyword))
+  }, [artistCategories, artistSearch])
 
   function submitGuess(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -29,6 +39,7 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
     setSong(next)
     setState(createInitialGameState(next))
     setInput("")
+    setMode("play")
   }
 
   function startRandomSong() {
@@ -44,6 +55,15 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
     }
   }
 
+  function showArtistPicker() {
+    setArtistSearch("")
+    setMode("artists")
+  }
+
+  function revealHint() {
+    setState((current) => applyHint(song, current))
+  }
+
   return (
     <main className="app-shell">
       <aside className="side-nav" aria-label="模式">
@@ -54,42 +74,40 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
         <button className="nav-item" disabled>
           每日挑战
         </button>
-        <div className="category-nav" aria-label="分类模式">
-          <span className="nav-label">分类</span>
-          {categories.map((category) => (
-            <button
-              className="nav-item nav-item-secondary"
-              key={category.id}
-              onClick={() => startCategory(category.id)}
-              type="button"
-            >
-              {category.label}
-              <span>{category.songCount}</span>
-            </button>
-          ))}
-        </div>
+        <button className="nav-item" onClick={showArtistPicker} type="button">
+          分类
+        </button>
         <button className="nav-item" disabled>
           登录
         </button>
       </aside>
 
       <section className="lyrics-panel" aria-label="歌词谜面">
-        {puzzleLines.map((line, lineIndex) => (
-          <div
-            aria-label={line.type === "title" ? "歌名" : `歌词行 ${lineIndex}`}
-            className={`puzzle-line puzzle-line-${line.type}`}
-            key={`${line.type}-${lineIndex}`}
-          >
-            {Array.from(line.text).map((char, charIndex) => (
-              <PuzzleCell
-                char={char}
-                isRevealed={state.revealedChars.includes(normalizeGuessChar(char))}
-                isSolved={state.isSolved}
-                key={`${line.type}-${lineIndex}-${charIndex}`}
-              />
-            ))}
-          </div>
-        ))}
+        {mode === "artists" ? (
+          <ArtistPicker
+            artists={visibleArtists}
+            search={artistSearch}
+            onSearchChange={setArtistSearch}
+            onStartCategory={startCategory}
+          />
+        ) : (
+          puzzleLines.map((line, lineIndex) => (
+            <div
+              aria-label={line.type === "title" ? "歌名" : `歌词行 ${lineIndex}`}
+              className={`puzzle-line puzzle-line-${line.type}`}
+              key={`${line.type}-${lineIndex}`}
+            >
+              {Array.from(line.text).map((char, charIndex) => (
+                <PuzzleCell
+                  char={char}
+                  isRevealed={state.revealedChars.includes(normalizeGuessChar(char))}
+                  isSolved={state.isSolved}
+                  key={`${line.type}-${lineIndex}-${charIndex}`}
+                />
+              ))}
+            </div>
+          ))
+        )}
       </section>
 
       <aside className="guess-panel" aria-label="猜测">
@@ -106,11 +124,18 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
             提交
           </button>
         </form>
+        <button className="hint-button" disabled={state.isSolved} onClick={revealHint} type="button">
+          提示
+        </button>
 
         <dl className="stats">
           <div>
             <dt>已猜次数</dt>
             <dd>{state.guessCount}</dd>
+          </div>
+          <div>
+            <dt>提示次数</dt>
+            <dd>{state.hintCount}</dd>
           </div>
           <div>
             <dt>不在歌里的字</dt>
@@ -131,6 +156,41 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
         ) : null}
       </aside>
     </main>
+  )
+}
+
+function ArtistPicker({
+  artists,
+  search,
+  onSearchChange,
+  onStartCategory,
+}: {
+  artists: Array<{ id: string; label: string; songCount: number }>
+  search: string
+  onSearchChange: (value: string) => void
+  onStartCategory: (categoryId: string) => void
+}) {
+  return (
+    <div className="artist-picker">
+      <div className="artist-search">
+        <label htmlFor="artist-search">搜索歌手</label>
+        <input
+          autoComplete="off"
+          id="artist-search"
+          onChange={(event) => onSearchChange(event.target.value)}
+          role="searchbox"
+          value={search}
+        />
+      </div>
+      <div className="artist-grid" aria-label="歌手列表">
+        {artists.map((artist) => (
+          <button className="artist-button" key={artist.id} onClick={() => onStartCategory(artist.id)} type="button">
+            {artist.label}
+            <span>{artist.songCount}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }
 

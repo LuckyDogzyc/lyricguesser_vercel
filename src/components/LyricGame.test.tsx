@@ -74,7 +74,7 @@ describe("LyricGame", () => {
     fireEvent.click(screen.getByRole("button", { name: "随机" }))
 
     expect(screen.queryByText("晴")).not.toBeInTheDocument()
-    expect(screen.getByText("0")).toBeInTheDocument()
+    expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("0")
 
     fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "花海" } })
     fireEvent.click(screen.getByRole("button", { name: "提交" }))
@@ -84,10 +84,10 @@ describe("LyricGame", () => {
   })
 
   it("renders artist categories and starts a category round", () => {
-    const masiweiSong: Song = {
+    const masiweiSongs = Array.from({ length: 5 }, (_, index): Song => ({
       ...song,
-      id: "masiwei",
-      title: "黑马",
+      id: `masiwei-${index}`,
+      title: index === 0 ? "黑马" : `马歌${index}`,
       artists: ["马思唯"],
       canonicalArtist: ["马思唯"],
       genres: ["说唱"],
@@ -95,15 +95,37 @@ describe("LyricGame", () => {
       eras: ["2020s"],
       popularityTier: "niche",
       lyrics: ["城市夜色"],
-    }
+    }))
+    vi.spyOn(Math, "random").mockReturnValue(0)
 
-    render(<LyricGame initialSong={song} songs={[song, masiweiSong]} />)
+    render(<LyricGame initialSong={song} songs={[song, ...masiweiSongs]} />)
 
-    fireEvent.click(screen.getByRole("button", { name: "马思唯 1" }))
+    fireEvent.click(screen.getByRole("button", { name: "分类" }))
+    expect(screen.getByRole("searchbox", { name: "搜索歌手" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "周杰伦 1" })).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "搜索歌手" }), { target: { value: "马思" } })
+    fireEvent.click(screen.getByRole("button", { name: "马思唯 5" }))
     fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "黑马" } })
     fireEvent.click(screen.getByRole("button", { name: "提交" }))
 
     expect(screen.getByText("胜利")).toBeInTheDocument()
     expect(screen.getByText("黑马 · 马思唯")).toBeInTheDocument()
+
+    vi.restoreAllMocks()
+  })
+
+  it("reveals a random hidden character through a hint and counts hints separately", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0)
+
+    render(<LyricGame initialSong={song} songs={[song]} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "提示" }))
+
+    expect(screen.getByText("晴")).toBeInTheDocument()
+    expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("1")
+    expect(screen.getByText("提示次数").nextSibling).toHaveTextContent("1")
+
+    vi.restoreAllMocks()
   })
 })

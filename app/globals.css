@@ -180,6 +180,7 @@ input {
 }
 
 .guess-form button,
+.hint-button,
 .victory button {
   min-height: 42px;
   border: 0;
@@ -190,6 +191,16 @@ input {
 }
 
 .guess-form button:disabled {
+  background: #aab1b8;
+  cursor: not-allowed;
+}
+
+.hint-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.hint-button:disabled {
   background: #aab1b8;
   cursor: not-allowed;
 }
@@ -223,6 +234,60 @@ input {
   border-radius: 8px;
   background: #e8f5e9;
   border: 1px solid #b7dfba;
+}
+
+.artist-picker {
+  display: grid;
+  gap: 20px;
+}
+
+.artist-search {
+  position: sticky;
+  top: 0;
+  display: grid;
+  gap: 8px;
+  padding-bottom: 12px;
+  background: #f6f2ea;
+  z-index: 1;
+}
+
+.artist-search label {
+  color: #625b50;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.artist-search input {
+  min-height: 44px;
+  max-width: 420px;
+  border: 1px solid #cfc3b2;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.artist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px;
+}
+
+.artist-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  border: 1px solid #d8ccba;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: #fff;
+  color: #24262b;
+  cursor: pointer;
+}
+
+.artist-button span {
+  color: #625b50;
+  font-size: 13px;
 }
 
 @media (max-width: 900px) {

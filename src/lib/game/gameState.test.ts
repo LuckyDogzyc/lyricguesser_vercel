@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Song } from "@/src/lib/catalog/song"
-import { applyGuess, createInitialGameState, getPuzzleLines, isSolved } from "./gameState"
+import { applyGuess, applyHint, createInitialGameState, getPuzzleLines, isSolved } from "./gameState"
 
 const song: Song = {
   id: "test",
@@ -147,5 +147,24 @@ describe("game state", () => {
     expect(next.revealedChars).not.toBe(previousRevealed)
     expect(next.missedChars).not.toBe(previousMissed)
     expect(next.guessedChars).not.toBe(previousGuessed)
+  })
+
+  it("reveals one unrevealed song character as a hint and counts it separately", () => {
+    const state = applyGuess(song, createInitialGameState(song), "晴")
+    const hinted = applyHint(song, state, () => 0)
+
+    expect(hinted.revealedChars).toEqual(["晴", "天"])
+    expect(hinted.guessedChars).toEqual(["晴", "天"])
+    expect(hinted.guessCount).toBe(2)
+    expect(hinted.hintCount).toBe(1)
+    expect(hinted.missedChars).toEqual([])
+    expect(hinted.isSolved).toBe(true)
+  })
+
+  it("does not count a hint when nothing is left to reveal", () => {
+    const solved = applyGuess(song, createInitialGameState(song), "晴天故事的小黄花青")
+    const hinted = applyHint(song, solved, () => 0)
+
+    expect(hinted).toBe(solved)
   })
 })

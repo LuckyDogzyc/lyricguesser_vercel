@@ -27,3 +27,12 @@ Tooling notes must say whether the request exposed gaps in parser behavior, tags
 When the user request is ambiguous or suggests a better workflow, include a concrete script modification request in Tooling notes and mirror it in `scriptImprovementRequests`.
 
 Do not bulk-ingest lyrics during tooling work. Search only enough to validate candidate flow, schema shape, or review behavior.
+
+## ChineseLyrics Local Import
+
+`chineseLyrics.ts` adapts local JSON files from the external ChineseLyrics repository into private `Song` drafts.
+Use it only with JSON files the user has downloaded or cloned locally, such as `lyrics1.json` through `lyrics5.json`.
+
+ChineseLyrics does not declare a clear license, so this repo must not commit that lyric corpus, generated bulk imports,
+or copied external lyrics. The adapter is a local-only conversion tool: read local JSON, normalize entries into reviewable
+drafts or ingestion plans, then keep any catalog writes limited to explicitly reviewed songs.

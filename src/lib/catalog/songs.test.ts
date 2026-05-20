@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type { Song } from "./song"
 import {
   getCatalogCategories,
+  getArtistCategories,
   getPlayableSongs,
   getRandomPoolSongs,
   getRandomSong,
@@ -165,5 +166,30 @@ describe("catalog categories", () => {
     )
     expect(getSongsByCategory("artist:马思唯", songs).map((song) => song.id)).toEqual(["masiwei"])
     expect(getSongsByCategory("theme:爱情", songs).map((song) => song.id)).toEqual(["jay"])
+  })
+
+  it("lists only artists with more than the requested minimum song count", () => {
+    const songs = [
+      ...Array.from({ length: 5 }, (_, index) =>
+        makeSong({
+          id: `jay-${index}`,
+          title: `周歌${index}`,
+          artists: ["周杰伦"],
+          canonicalArtist: ["周杰伦"],
+        }),
+      ),
+      ...Array.from({ length: 4 }, (_, index) =>
+        makeSong({
+          id: `masiwei-${index}`,
+          title: `马歌${index}`,
+          artists: ["马思唯"],
+          canonicalArtist: ["马思唯"],
+        }),
+      ),
+    ]
+
+    expect(getArtistCategories(songs, 4)).toEqual([
+      expect.objectContaining({ id: "artist:周杰伦", label: "周杰伦", songCount: 5 }),
+    ])
   })
 })

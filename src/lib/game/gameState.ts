@@ -12,6 +12,7 @@ export type GameState = {
   missedChars: string[]
   guessedChars: string[]
   guessCount: number
+  hintCount: number
   isSolved: boolean
 }
 
@@ -29,6 +30,7 @@ export function createInitialGameState(song: Song): GameState {
     missedChars: [],
     guessedChars: [],
     guessCount: 0,
+    hintCount: 0,
     isSolved: false,
   }
 }
@@ -72,6 +74,7 @@ export function applyGuess(song: Song, state: GameState, input: string): GameSta
     missedChars: Array.from(missed),
     guessedChars: Array.from(guessed),
     guessCount: state.guessCount + newChars.length,
+    hintCount: state.hintCount,
     isSolved: false,
   }
 
@@ -79,4 +82,39 @@ export function applyGuess(song: Song, state: GameState, input: string): GameSta
     ...next,
     isSolved: isSolved(song, next),
   }
+}
+
+export function applyHint(song: Song, state: GameState, random: () => number = Math.random): GameState {
+  if (state.isSolved) {
+    return state
+  }
+
+  const unrevealedChars = getUnrevealedSongChars(song, state)
+  if (unrevealedChars.length === 0) {
+    return state
+  }
+
+  const hintedChar = unrevealedChars[Math.floor(random() * unrevealedChars.length)] ?? unrevealedChars[0]
+  const revealed = new Set(state.revealedChars)
+  const guessed = new Set(state.guessedChars)
+  revealed.add(hintedChar)
+  guessed.add(hintedChar)
+
+  const next: GameState = {
+    ...state,
+    revealedChars: Array.from(revealed),
+    guessedChars: Array.from(guessed),
+    guessCount: state.guessCount + 1,
+    hintCount: state.hintCount + 1,
+  }
+
+  return {
+    ...next,
+    isSolved: isSolved(song, next),
+  }
+}
+
+function getUnrevealedSongChars(song: Song, state: GameState): string[] {
+  const songChars = getSongGuessableChars(song)
+  return Array.from(songChars).filter((char) => !state.revealedChars.includes(char))
 }
