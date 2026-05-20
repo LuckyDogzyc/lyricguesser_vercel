@@ -51,7 +51,9 @@ input {
 }
 
 .nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: 40px;
   margin-bottom: 10px;
@@ -60,6 +62,13 @@ input {
   background: #fff;
   color: #24262b;
   cursor: pointer;
+}
+
+.nav-item span {
+  margin-left: auto;
+  padding-right: 10px;
+  color: inherit;
+  font-size: 13px;
 }
 
 .nav-item:disabled {
@@ -73,8 +82,29 @@ input {
   color: #fff;
 }
 
+.nav-item-secondary {
+  justify-content: flex-start;
+  padding: 0 12px;
+  background: #fffaf1;
+}
+
+.nav-label {
+  display: block;
+  margin: 18px 0 8px;
+  color: #625b50;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.category-nav {
+  max-height: 42vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .lyrics-panel {
   min-width: 0;
+  max-height: 100vh;
   padding: 24px clamp(18px, 4vw, 48px);
   overflow-y: auto;
 }

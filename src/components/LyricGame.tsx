@@ -2,6 +2,7 @@
 
 import React, { FormEvent, useMemo, useState } from "react"
 import type { Song } from "@/src/lib/catalog/song"
+import { getCatalogCategories, getRandomEligibleSongs, getSongsForCategory } from "@/src/lib/catalog/songs"
 import { isGuessableChar, normalizeGuessChar } from "@/src/lib/game/characters"
 import { applyGuess, createInitialGameState, getPuzzleLines } from "@/src/lib/game/gameState"
 
@@ -15,6 +16,8 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
   const [state, setState] = useState(() => createInitialGameState(initialSong))
   const [input, setInput] = useState("")
   const puzzleLines = useMemo(() => getPuzzleLines(song), [song])
+  const randomSongs = useMemo(() => getRandomEligibleSongs(songs), [songs])
+  const categories = useMemo(() => getCatalogCategories(songs), [songs])
 
   function submitGuess(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -22,24 +25,49 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
     setInput("")
   }
 
-  function nextSong() {
-    const next = songs[Math.floor(Math.random() * songs.length)] ?? initialSong
+  function startSong(next: Song) {
     setSong(next)
     setState(createInitialGameState(next))
     setInput("")
+  }
+
+  function startRandomSong() {
+    const pool = randomSongs.length > 0 ? randomSongs : songs
+    startSong(pickRandomSong(pool, song) ?? initialSong)
+  }
+
+  function startCategory(categoryId: string) {
+    const categorySongs = getSongsForCategory(categoryId, songs)
+    const next = pickRandomSong(categorySongs, song)
+    if (next) {
+      startSong(next)
+    }
   }
 
   return (
     <main className="app-shell">
       <aside className="side-nav" aria-label="模式">
         <h1>猜歌词</h1>
-        <button className="nav-item nav-item-active">随机</button>
+        <button className="nav-item nav-item-active" onClick={startRandomSong} type="button">
+          随机
+        </button>
         <button className="nav-item" disabled>
           每日挑战
         </button>
-        <button className="nav-item" disabled>
-          分类
-        </button>
+        <div className="category-nav" aria-label="分类模式">
+          <span className="nav-label">分类</span>
+          {categories.map((category) => (
+            <button
+              className="nav-item nav-item-secondary"
+              key={category.id}
+              onClick={() => startCategory(category.id)}
+              type="button"
+            >
+              {category.label}
+              <span>{category.songCount}</span>
+            </button>
+          ))}
+        </div>
         <button className="nav-item" disabled>
           登录
         </button>
@@ -96,7 +124,7 @@ export function LyricGame({ initialSong, songs }: LyricGameProps) {
             <p>
               {song.title} · {song.canonicalArtist.join(" / ")}
             </p>
-            <button type="button" onClick={nextSong}>
+            <button type="button" onClick={startRandomSong}>
               随机下一首
             </button>
           </div>
@@ -122,4 +150,17 @@ function PuzzleCell({ char, isRevealed, isSolved }: { char: string; isRevealed: 
   }
 
   return <span className="puzzle-cell puzzle-cell-hidden" aria-label="隐藏字" />
+}
+
+function pickRandomSong(songs: Song[], currentSong: Song): Song | null {
+  if (songs.length === 0) {
+    return null
+  }
+
+  if (songs.length === 1) {
+    return songs[0]
+  }
+
+  const alternatives = songs.filter((candidate) => candidate.id !== currentSong.id)
+  return alternatives[Math.floor(Math.random() * alternatives.length)] ?? songs[0]
 }

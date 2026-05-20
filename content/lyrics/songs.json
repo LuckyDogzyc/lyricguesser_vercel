@@ -32,6 +32,43 @@
       "classification": 0.9,
       "overall": 0.95
     },
+    "lyricsStatus": "excerpt",
     "lyrics": ["故事的小黄花", "从出生那年就飘着", "童年的荡秋千", "随记忆一直晃到现在"]
+  },
+  {
+    "id": "masiwei-hei-ma",
+    "title": "黑马",
+    "aliases": [],
+    "artists": ["马思唯"],
+    "canonicalArtist": ["马思唯"],
+    "relatedPerformers": [],
+    "versionType": "original",
+    "originalLanguage": "zh",
+    "lyricist": ["马思唯"],
+    "composer": ["马思唯"],
+    "releaseYear": 2023,
+    "album": "黑马",
+    "language": "zh",
+    "regions": ["中国大陆"],
+    "genres": ["说唱"],
+    "moods": ["自信"],
+    "themes": ["城市", "自我表达"],
+    "contexts": ["分类测试"],
+    "eras": ["2020s"],
+    "popularityTier": "niche",
+    "source": {
+      "query": "seed song for category mode development",
+      "lyricUrls": [],
+      "metadataUrls": [],
+      "collectedAt": "2026-05-20"
+    },
+    "confidence": {
+      "metadata": 0.85,
+      "lyrics": 0.6,
+      "classification": 0.8,
+      "overall": 0.74
+    },
+    "lyricsStatus": "excerpt",
+    "lyrics": ["黑马穿过城市夜色", "把名字留在灯光里"]
   }
 ]

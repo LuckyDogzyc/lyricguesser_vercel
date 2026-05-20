@@ -33,6 +33,7 @@ export type Song = {
   contexts?: string[]
   eras: string[]
   popularityTier?: "classic" | "popular" | "niche"
+  lyricsStatus?: "complete" | "excerpt" | "pending"
   source: SongSource
   confidence: SongConfidence
   lyrics: string[]
