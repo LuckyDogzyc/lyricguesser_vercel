@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Song } from "@/src/lib/catalog/song"
 import { LyricGame } from "./LyricGame"
 
@@ -32,6 +32,11 @@ const song: Song = {
 }
 
 describe("LyricGame", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
   it("reveals guessed title characters and wins when the full title is revealed", () => {
     render(<LyricGame initialSong={song} songs={[song]} />)
 
@@ -54,7 +59,7 @@ describe("LyricGame", () => {
     expect(within(screen.getByLabelText("歌词行 1")).getByText("故")).toHaveClass("puzzle-cell-complete")
   })
 
-  it("starts a fresh random round from the left nav and clears previous guesses", () => {
+  it("starts a fresh random round from the left nav and clears previous guesses", async () => {
     const nextSong: Song = {
       ...song,
       id: "next",
@@ -62,7 +67,10 @@ describe("LyricGame", () => {
       popularityTier: "classic",
       lyrics: ["海风吹过"],
     }
-    vi.spyOn(Math, "random").mockReturnValue(0)
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json(nextSong)),
+    )
 
     render(<LyricGame initialSong={song} songs={[song, nextSong]} />)
 
@@ -73,14 +81,13 @@ describe("LyricGame", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "随机" }))
 
+    expect(await screen.findByLabelText("歌词行 1")).toHaveTextContent("")
     expect(screen.queryByText("晴")).not.toBeInTheDocument()
     expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("0")
 
     fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "花海" } })
     fireEvent.click(screen.getByRole("button", { name: "提交" }))
     expect(screen.getByText("胜利")).toBeInTheDocument()
-
-    vi.restoreAllMocks()
   })
 
   it("renders artist categories and starts a category round", () => {
@@ -111,8 +118,6 @@ describe("LyricGame", () => {
 
     expect(screen.getByText("胜利")).toBeInTheDocument()
     expect(screen.getByText("黑马 · 马思唯")).toBeInTheDocument()
-
-    vi.restoreAllMocks()
   })
 
   it("reveals a random hidden character through a hint and counts hints separately", () => {
@@ -125,7 +130,5 @@ describe("LyricGame", () => {
     expect(screen.getByText("晴")).toBeInTheDocument()
     expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("1")
     expect(screen.getByText("提示次数").nextSibling).toHaveTextContent("1")
-
-    vi.restoreAllMocks()
   })
 })

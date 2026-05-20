@@ -47,6 +47,17 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
   }
 
   function startRandomSong() {
+    void startRemoteRandomSong()
+  }
+
+  async function startRemoteRandomSong() {
+    const response = await fetch(`/api/random-song?currentSongId=${encodeURIComponent(song.id)}`)
+    if (response.ok) {
+      const remoteSong = (await response.json()) as Song
+      startSong(remoteSong)
+      return
+    }
+
     const pool = randomSongs.length > 0 ? randomSongs : songs
     startSong(pickRandomSong(pool, song) ?? initialSong)
   }

@@ -4,7 +4,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import type { Song } from "./song"
 import type { SongCategory } from "./songs"
-import { getArtistCategories, getSongsForCategory } from "./songs"
+import { getArtistCategories, getPlayableSongs, getSongsForCategory } from "./songs"
 
 const privateCatalogPath = join(process.cwd(), "content", "lyrics", "songs.local.json")
 const publicCatalogDir = join(process.cwd(), "content", "lyrics", "catalog")
@@ -33,6 +33,20 @@ export function getPrivateSongs(): Song[] {
 
 export function getPrivateArtistCategories(minimumSongCount = 4): SongCategory[] {
   return getArtistCategories(getPrivateSongs(), minimumSongCount)
+}
+
+export function getPrivateRandomSong(currentSongId?: string): Song | null {
+  const songs = getPlayableSongs(getPrivateSongs())
+  if (songs.length === 0) {
+    return null
+  }
+
+  if (songs.length === 1) {
+    return songs[0]
+  }
+
+  const alternatives = currentSongId ? songs.filter((song) => song.id !== currentSongId) : songs
+  return alternatives[Math.floor(Math.random() * alternatives.length)] ?? songs[0]
 }
 
 export function getPrivateSongForCategory(categoryId: string): Song | null {
