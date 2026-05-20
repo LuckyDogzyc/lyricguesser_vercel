@@ -17,8 +17,11 @@ Open `http://localhost:3000`.
 
 ```bash
 npm run test
+npm run import:catalog
 npm run build
 ```
+
+`npm run import:catalog` creates `data/lyric-catalog.sqlite` from the chunked catalog. The SQLite file is local deploy state and is intentionally ignored by git.
 
 ## Content Catalog
 
@@ -38,7 +41,7 @@ The ignored local single-file copy, when present, lives at:
 content/lyrics/songs.local.json
 ```
 
-Runtime lookup currently reads the chunked JSON catalog from the server filesystem. Do not ship the full catalog to the browser bundle.
+Runtime lookup reads the local SQLite database when `data/lyric-catalog.sqlite` exists, falling back to the chunked JSON catalog only for development/import recovery. Do not ship the full catalog to the browser bundle.
 
 Pending machine-readable review data lives in `content/pending`.
 
@@ -87,6 +90,7 @@ git clone git@github.com:LuckyDogzyc/lyricguesser_vercel.git lyric-guesser
 cd lyric-guesser
 npm ci
 npm run test
+npm run import:catalog
 npm run build
 npm run start
 ```
@@ -137,6 +141,7 @@ git fetch origin main
 git reset --hard origin/main
 npm ci
 npm run test
+npm run import:catalog
 npm run build
 pm2 restart lyric-guesser
 ```
@@ -178,4 +183,4 @@ Database-backed runtime should expose the same behavior as the current JSON-back
 - the frontend receives only the selected song;
 - category lists include artists with more than four songs.
 
-Current code still reads chunked JSON from `content/lyrics/catalog`. If Hermes moves the catalog into SQLite, the app needs a small catalog adapter change so `getPrivateRandomSong`, `getPrivateArtistCategories`, and `getPrivateSongForCategory` read from SQLite instead of JSON files.
+Current runtime uses the SQLite database when available. `getPrivateRandomSong`, `getPrivateArtistCategories`, and `getPrivateSongForCategory` read from `data/lyric-catalog.sqlite` or the path in `LYRIC_CATALOG_DB_PATH`; JSON chunks remain only as import/fallback input.

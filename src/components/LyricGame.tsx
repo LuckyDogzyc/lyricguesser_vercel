@@ -9,11 +9,11 @@ import type { SongCategory } from "@/src/lib/catalog/songs"
 
 type LyricGameProps = {
   initialSong: Song
-  songs: Song[]
+  songs?: Song[]
   artistCategories?: SongCategory[]
 }
 
-export function LyricGame({ initialSong, songs, artistCategories: providedArtistCategories }: LyricGameProps) {
+export function LyricGame({ initialSong, songs = [], artistCategories: providedArtistCategories }: LyricGameProps) {
   const [song, setSong] = useState(initialSong)
   const [state, setState] = useState(() => createInitialGameState(initialSong))
   const [input, setInput] = useState("")

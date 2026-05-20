@@ -1,10 +1,8 @@
 import { LyricGame } from "@/src/components/LyricGame"
 import { getPrivateArtistCategories, getPrivateRandomSong } from "@/src/lib/catalog/privateCatalog"
-import { getPlayableSongs, getRandomSong } from "@/src/lib/catalog/songs"
 
 export default function Home() {
-  const songs = getPlayableSongs()
-  const song = getPrivateRandomSong() ?? getRandomSong(songs)
+  const song = getPrivateRandomSong()
   const artistCategories = getPrivateArtistCategories()
 
   if (!song) {
@@ -23,5 +21,5 @@ export default function Home() {
     )
   }
 
-  return <LyricGame artistCategories={artistCategories} initialSong={song} songs={songs} />
+  return <LyricGame artistCategories={artistCategories} initialSong={song} />
 }

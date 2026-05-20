@@ -5,6 +5,13 @@ import { join } from "node:path"
 import type { Song } from "./song"
 import type { SongCategory } from "./songs"
 import { getArtistCategories, getPlayableSongs, getSongsForCategory } from "./songs"
+import {
+  getDatabaseArtistCategories,
+  getDatabaseRandomSong,
+  getDatabaseSongForCategory,
+  getDatabaseSongs,
+  hasCatalogDatabase,
+} from "./dbCatalog"
 
 const privateCatalogPath = join(process.cwd(), "content", "lyrics", "songs.local.json")
 const publicCatalogDir = join(process.cwd(), "content", "lyrics", "catalog")
@@ -12,6 +19,10 @@ const publicCatalogDir = join(process.cwd(), "content", "lyrics", "catalog")
 let cachedSongs: Song[] | null = null
 
 export function getPrivateSongs(): Song[] {
+  if (hasCatalogDatabase()) {
+    return getDatabaseSongs()
+  }
+
   if (cachedSongs) {
     return cachedSongs
   }
@@ -32,10 +43,18 @@ export function getPrivateSongs(): Song[] {
 }
 
 export function getPrivateArtistCategories(minimumSongCount = 4): SongCategory[] {
+  if (hasCatalogDatabase()) {
+    return getDatabaseArtistCategories(minimumSongCount)
+  }
+
   return getArtistCategories(getPrivateSongs(), minimumSongCount)
 }
 
 export function getPrivateRandomSong(currentSongId?: string): Song | null {
+  if (hasCatalogDatabase()) {
+    return getDatabaseRandomSong(currentSongId)
+  }
+
   const songs = getPlayableSongs(getPrivateSongs())
   if (songs.length === 0) {
     return null
@@ -50,6 +69,10 @@ export function getPrivateRandomSong(currentSongId?: string): Song | null {
 }
 
 export function getPrivateSongForCategory(categoryId: string): Song | null {
+  if (hasCatalogDatabase()) {
+    return getDatabaseSongForCategory(categoryId)
+  }
+
   const songs = getSongsForCategory(categoryId, getPrivateSongs())
   if (songs.length === 0) {
     return null
