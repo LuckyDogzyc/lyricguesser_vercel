@@ -135,12 +135,14 @@ export function applyHint(song: Song, state: GameState, random: () => number = M
 }
 
 function getUnrevealedSongChars(song: Song, state: GameState): string[] {
-  const lyricChars = textToGuessableSet(song.lyrics.join(""))
-  const unrevealedLyricChars = Array.from(lyricChars).filter((char) => !state.revealedChars.includes(char))
-  if (unrevealedLyricChars.length > 0) {
-    return unrevealedLyricChars
+  const titleChars = textToGuessableSet(song.title)
+  const songChars = getSongGuessableChars(song)
+  const unrevealedSongChars = Array.from(songChars).filter((char) => !state.revealedChars.includes(char))
+  const unrevealedNonTitleChars = unrevealedSongChars.filter((char) => !titleChars.has(char))
+
+  if (unrevealedNonTitleChars.length > 0) {
+    return unrevealedNonTitleChars
   }
 
-  const titleChars = textToGuessableSet(song.title)
-  return Array.from(titleChars).filter((char) => !state.revealedChars.includes(char))
+  return unrevealedSongChars
 }

@@ -170,6 +170,19 @@ describe("game state", () => {
     expect(hinted.isSolved).toBe(false)
   })
 
+  it("does not hint title characters even when they also appear in lyrics until all other tokens are revealed", () => {
+    const repeatedTitleSong: Song = {
+      ...song,
+      title: "晴天",
+      lyrics: ["晴天故事"],
+    }
+    const hinted = applyHint(repeatedTitleSong, createInitialGameState(repeatedTitleSong), () => 0)
+
+    expect(hinted.lastHintedChars).toEqual(["故"])
+    expect(hinted.revealedChars).not.toContain("晴")
+    expect(hinted.revealedChars).not.toContain("天")
+  })
+
   it("falls back to title hints only after lyric characters are revealed", () => {
     const titleFallbackSong: Song = {
       ...song,
