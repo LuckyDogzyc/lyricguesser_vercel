@@ -97,13 +97,29 @@ export function getDatabaseRandomSong(currentSongId?: string): Song | null {
   )
 }
 
-export function getDatabaseSongForCategory(categoryId: string): Song | null {
+export function getDatabaseSongForCategory(categoryId: string, currentSongId?: string): Song | null {
   if (!hasCatalogDatabase()) {
     return null
   }
 
+  const db = getDatabase()
+  const row = db
+    .prepare(
+      `SELECT s.song_json
+       FROM songs s
+       JOIN song_categories sc ON sc.song_id = s.id
+       WHERE s.playable = 1 AND sc.category_id = ? AND (? IS NULL OR s.id != ?)
+       ORDER BY random()
+       LIMIT 1`,
+    )
+    .get(categoryId, currentSongId ?? null, currentSongId ?? null) as SongJsonRow | undefined
+
+  if (row) {
+    return parseSongRow(row)
+  }
+
   return parseOptionalSongRow(
-    getDatabase()
+    db
       .prepare(
         `SELECT s.song_json
          FROM songs s

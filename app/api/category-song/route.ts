@@ -7,7 +7,8 @@ export function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing categoryId" }, { status: 400 })
   }
 
-  const song = getPrivateSongForCategory(categoryId)
+  const currentSongId = request.nextUrl.searchParams.get("currentSongId") ?? undefined
+  const song = getPrivateSongForCategory(categoryId, currentSongId)
   if (!song) {
     return NextResponse.json({ error: "No song found" }, { status: 404 })
   }

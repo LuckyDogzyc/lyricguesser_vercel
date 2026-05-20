@@ -68,9 +68,9 @@ export function getPrivateRandomSong(currentSongId?: string): Song | null {
   return alternatives[Math.floor(Math.random() * alternatives.length)] ?? songs[0]
 }
 
-export function getPrivateSongForCategory(categoryId: string): Song | null {
+export function getPrivateSongForCategory(categoryId: string, currentSongId?: string): Song | null {
   if (hasCatalogDatabase()) {
-    return getDatabaseSongForCategory(categoryId)
+    return getDatabaseSongForCategory(categoryId, currentSongId)
   }
 
   const songs = getSongsForCategory(categoryId, getPrivateSongs())
@@ -78,7 +78,12 @@ export function getPrivateSongForCategory(categoryId: string): Song | null {
     return null
   }
 
-  return songs[Math.floor(Math.random() * songs.length)] ?? songs[0]
+  if (songs.length === 1) {
+    return songs[0]
+  }
+
+  const alternatives = currentSongId ? songs.filter((song) => song.id !== currentSongId) : songs
+  return alternatives[Math.floor(Math.random() * alternatives.length)] ?? songs[0]
 }
 
 function getPublicCatalogChunkPaths(): string[] {

@@ -64,6 +64,16 @@ describe("SQLite catalog runtime", () => {
     expect(getDatabaseSongForCategory("artist:周杰伦")?.id).toBe("jay")
   })
 
+  it("avoids the current song when sampling a category when alternatives exist", () => {
+    const dbPath = createCatalogDatabase([
+      makeSong({ id: "jay-1", title: "晴天", canonicalArtist: ["周杰伦"], artists: ["周杰伦"] }),
+      makeSong({ id: "jay-2", title: "稻香", canonicalArtist: ["周杰伦"], artists: ["周杰伦"] }),
+    ])
+    process.env.LYRIC_CATALOG_DB_PATH = dbPath
+
+    expect(getDatabaseSongForCategory("artist:周杰伦", "jay-1")?.id).toBe("jay-2")
+  })
+
   it("lists artist categories without loading the full song catalog into the client", () => {
     const jaySongs = Array.from({ length: 5 }, (_, index) =>
       makeSong({ id: `jay-${index}`, title: `周歌${index}`, canonicalArtist: ["周杰伦"], artists: ["周杰伦"] }),

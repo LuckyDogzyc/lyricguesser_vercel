@@ -3,7 +3,7 @@
 import React, { FormEvent, useMemo, useState } from "react"
 import type { Song } from "@/src/lib/catalog/song"
 import { getArtistCategories, getRandomEligibleSongs, getSongsForCategory } from "@/src/lib/catalog/songs"
-import { isGuessableChar, normalizeGuessChar } from "@/src/lib/game/characters"
+import { splitTextGuessUnits } from "@/src/lib/game/characters"
 import { applyGuess, applyHint, createInitialGameState, getPuzzleLines } from "@/src/lib/game/gameState"
 import type { SongCategory } from "@/src/lib/catalog/songs"
 
@@ -20,6 +20,7 @@ export function LyricGame({ initialSong, songs = [], artistCategories: providedA
   const [mode, setMode] = useState<"play" | "artists">("play")
   const [artistSearch, setArtistSearch] = useState("")
   const [isNavOpen, setIsNavOpen] = useState(false)
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const puzzleLines = useMemo(() => getPuzzleLines(song), [song])
   const randomSongs = useMemo(() => getRandomEligibleSongs(songs), [songs])
   const artistCategories = useMemo(() => providedArtistCategories ?? getArtistCategories(songs), [providedArtistCategories, songs])
@@ -51,6 +52,7 @@ export function LyricGame({ initialSong, songs = [], artistCategories: providedA
   }
 
   async function startRemoteRandomSong() {
+    setActiveCategoryId(null)
     const response = await fetch(`/api/random-song?currentSongId=${encodeURIComponent(song.id)}`)
     if (response.ok) {
       const remoteSong = (await response.json()) as Song
@@ -66,13 +68,17 @@ export function LyricGame({ initialSong, songs = [], artistCategories: providedA
     const categorySongs = getSongsForCategory(categoryId, songs)
     const next = pickRandomSong(categorySongs, song)
     if (next) {
+      setActiveCategoryId(categoryId)
       startSong(next)
       return
     }
 
-    const response = await fetch(`/api/category-song?categoryId=${encodeURIComponent(categoryId)}`)
+    const response = await fetch(
+      `/api/category-song?categoryId=${encodeURIComponent(categoryId)}&currentSongId=${encodeURIComponent(song.id)}`,
+    )
     if (response.ok) {
       const remoteSong = (await response.json()) as Song
+      setActiveCategoryId(categoryId)
       startSong(remoteSong)
     }
   }
@@ -130,12 +136,15 @@ export function LyricGame({ initialSong, songs = [], artistCategories: providedA
               className={`puzzle-line puzzle-line-${line.type}`}
               key={`${line.type}-${lineIndex}`}
             >
-              {Array.from(line.text).map((char, charIndex) => (
+              {splitTextGuessUnits(line.text).map((unit, unitIndex) => (
                 <PuzzleCell
-                  char={char}
-                  isRevealed={state.revealedChars.includes(normalizeGuessChar(char))}
+                  unit={unit}
+                  isRevealed={state.revealedChars.includes(unit.normalized)}
                   isSolved={state.isSolved}
-                  key={`${line.type}-${lineIndex}-${charIndex}`}
+                  wasLastRevealed={state.lastRevealedChars.includes(unit.normalized)}
+                  wasHinted={state.hintedChars.includes(unit.normalized)}
+                  wasLastHinted={state.lastHintedChars.includes(unit.normalized)}
+                  key={`${line.type}-${lineIndex}-${unitIndex}`}
                 />
               ))}
             </div>
@@ -185,8 +194,11 @@ export function LyricGame({ initialSong, songs = [], artistCategories: providedA
             <p>
               {song.title} · {song.canonicalArtist.join(" / ")}
             </p>
-            <button type="button" onClick={startRandomSong}>
-              随机下一首
+            <button
+              type="button"
+              onClick={activeCategoryId ? () => void startCategory(activeCategoryId) : startRandomSong}
+            >
+              {activeCategoryId ? "分类下一首" : "随机下一首"}
             </button>
           </div>
         ) : null}
@@ -230,19 +242,45 @@ function ArtistPicker({
   )
 }
 
-function PuzzleCell({ char, isRevealed, isSolved }: { char: string; isRevealed: boolean; isSolved: boolean }) {
-  const normalizedChar = normalizeGuessChar(char)
-
-  if (!isGuessableChar(normalizedChar)) {
+function PuzzleCell({
+  unit,
+  isRevealed,
+  isSolved,
+  wasLastRevealed,
+  wasHinted,
+  wasLastHinted,
+}: {
+  unit: ReturnType<typeof splitTextGuessUnits>[number]
+  isRevealed: boolean
+  isSolved: boolean
+  wasLastRevealed: boolean
+  wasHinted: boolean
+  wasLastHinted: boolean
+}) {
+  if (!unit.isGuessable) {
     return <span className="puzzle-space" aria-hidden="true" />
   }
 
   if (isRevealed) {
-    return <span className="puzzle-cell puzzle-cell-revealed">{char}</span>
+    return (
+      <span
+        className={[
+          "puzzle-cell",
+          "puzzle-cell-revealed",
+          wasHinted ? "puzzle-cell-hinted" : "",
+          wasLastRevealed ? "puzzle-cell-last" : "",
+          wasLastHinted ? "puzzle-cell-last-hinted" : "",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        {unit.text}
+      </span>
+    )
   }
 
   if (isSolved) {
-    return <span className="puzzle-cell puzzle-cell-complete">{char}</span>
+    return <span className="puzzle-cell puzzle-cell-complete">{unit.text}</span>
   }
 
   return <span className="puzzle-cell puzzle-cell-hidden" aria-label="隐藏字" />

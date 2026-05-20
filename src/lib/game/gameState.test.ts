@@ -71,18 +71,22 @@ describe("game state", () => {
     expect(state.guessCount).toBe(0)
   })
 
-  it("normalizes English case and full-width input for comparison", () => {
+  it("treats English words as whole guess units", () => {
     const englishSong: Song = {
       ...song,
-      title: "Ａbc",
+      title: "Ａbc Song",
       lyrics: ["full width ABC"],
     }
 
-    const state = applyGuess(englishSong, createInitialGameState(englishSong), "aＢC")
+    const partial = applyGuess(englishSong, createInitialGameState(englishSong), "aＢC")
+    const solved = applyGuess(englishSong, partial, "song")
 
-    expect(state.revealedChars).toEqual(["a", "b", "c"])
-    expect(state.guessCount).toBe(3)
-    expect(state.isSolved).toBe(true)
+    expect(partial.revealedChars).toEqual(["abc"])
+    expect(partial.guessCount).toBe(1)
+    expect(partial.isSolved).toBe(false)
+    expect(solved.revealedChars).toEqual(["abc", "song"])
+    expect(solved.guessCount).toBe(2)
+    expect(solved.isSolved).toBe(true)
   })
 
   it("normalizes decomposed guesses against precomposed title text", () => {
@@ -108,24 +112,24 @@ describe("game state", () => {
       lyrics: ["digits 456"],
     }
 
-    const state = applyGuess(digitSong, createInitialGameState(digitSong), "123４５６")
+    const state = applyGuess(digitSong, createInitialGameState(digitSong), "123 ４５６")
 
-    expect(state.revealedChars).toEqual(["1", "2", "3", "4", "5", "6"])
-    expect(state.guessCount).toBe(6)
+    expect(state.revealedChars).toEqual(["123", "456"])
+    expect(state.guessCount).toBe(2)
     expect(state.isSolved).toBe(true)
   })
 
   it("counts duplicate normalized guesses once", () => {
     const duplicateSong: Song = {
       ...song,
-      title: "a",
+      title: "apple",
       lyrics: [],
     }
 
-    const state = applyGuess(duplicateSong, createInitialGameState(duplicateSong), "aＡ")
+    const state = applyGuess(duplicateSong, createInitialGameState(duplicateSong), "apple ＡＰＰＬＥ")
 
-    expect(state.guessedChars).toEqual(["a"])
-    expect(state.revealedChars).toEqual(["a"])
+    expect(state.guessedChars).toEqual(["apple"])
+    expect(state.revealedChars).toEqual(["apple"])
     expect(state.guessCount).toBe(1)
     expect(state.isSolved).toBe(true)
   })
@@ -142,22 +146,41 @@ describe("game state", () => {
     expect(previous.missedChars).toEqual([])
     expect(previous.guessedChars).toEqual(["天"])
     expect(next.revealedChars).toEqual(["天", "花"])
+    expect(next.lastRevealedChars).toEqual(["花"])
     expect(next.missedChars).toEqual(["海"])
+    expect(next.lastMissedChars).toEqual(["海"])
     expect(next.guessedChars).toEqual(["天", "海", "花"])
     expect(next.revealedChars).not.toBe(previousRevealed)
     expect(next.missedChars).not.toBe(previousMissed)
     expect(next.guessedChars).not.toBe(previousGuessed)
   })
 
-  it("reveals one unrevealed song character as a hint and counts it separately", () => {
+  it("reveals one unrevealed lyric character as a hint before title characters", () => {
     const state = applyGuess(song, createInitialGameState(song), "晴")
     const hinted = applyHint(song, state, () => 0)
 
-    expect(hinted.revealedChars).toEqual(["晴", "天"])
-    expect(hinted.guessedChars).toEqual(["晴", "天"])
+    expect(hinted.revealedChars).toEqual(["晴", "故"])
+    expect(hinted.lastRevealedChars).toEqual(["故"])
+    expect(hinted.hintedChars).toEqual(["故"])
+    expect(hinted.lastHintedChars).toEqual(["故"])
+    expect(hinted.guessedChars).toEqual(["晴", "故"])
     expect(hinted.guessCount).toBe(2)
     expect(hinted.hintCount).toBe(1)
     expect(hinted.missedChars).toEqual([])
+    expect(hinted.isSolved).toBe(false)
+  })
+
+  it("falls back to title hints only after lyric characters are revealed", () => {
+    const titleFallbackSong: Song = {
+      ...song,
+      title: "海天",
+      lyrics: ["风"],
+    }
+    const state = applyGuess(titleFallbackSong, createInitialGameState(titleFallbackSong), "风海")
+    const hinted = applyHint(titleFallbackSong, state, () => 0)
+
+    expect(hinted.revealedChars).toContain("天")
+    expect(hinted.lastHintedChars).toEqual(["天"])
     expect(hinted.isSolved).toBe(true)
   })
 

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import React from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Song } from "@/src/lib/catalog/song"
@@ -81,8 +81,7 @@ describe("LyricGame", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "随机" }))
 
-    expect(await screen.findByLabelText("歌词行 1")).toHaveTextContent("")
-    expect(screen.queryByText("晴")).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText("晴")).not.toBeInTheDocument())
     expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("0")
 
     fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "花海" } })
@@ -118,17 +117,54 @@ describe("LyricGame", () => {
 
     expect(screen.getByText("胜利")).toBeInTheDocument()
     expect(screen.getByText("黑马 · 马思唯")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "分类下一首" })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "分类下一首" }))
+    fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "马歌1" } })
+    fireEvent.click(screen.getByRole("button", { name: "提交" }))
+    expect(screen.getByText("马歌1 · 马思唯")).toBeInTheDocument()
   })
 
-  it("reveals a random hidden character through a hint and counts hints separately", () => {
+  it("reveals a lyric character through a hint and highlights it separately", () => {
     vi.spyOn(Math, "random").mockReturnValue(0)
 
     render(<LyricGame initialSong={song} songs={[song]} />)
 
     fireEvent.click(screen.getByRole("button", { name: "提示" }))
 
-    expect(screen.getByText("晴")).toBeInTheDocument()
+    expect(screen.getByText("故")).toHaveClass("puzzle-cell-hinted", "puzzle-cell-last", "puzzle-cell-last-hinted")
     expect(screen.getByText("已猜次数").nextSibling).toHaveTextContent("1")
     expect(screen.getByText("提示次数").nextSibling).toHaveTextContent("1")
+
+    fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "事" } })
+    fireEvent.click(screen.getByRole("button", { name: "提交" }))
+
+    expect(screen.getByText("故")).toHaveClass("puzzle-cell-hinted")
+    expect(screen.getByText("故")).not.toHaveClass("puzzle-cell-last")
+    expect(screen.getByText("事")).toHaveClass("puzzle-cell-last")
+  })
+
+  it("treats English words as one puzzle cell instead of individual letters", () => {
+    const englishSong: Song = {
+      ...song,
+      id: "english",
+      title: "Love Story",
+      lyrics: ["Baby just say yes"],
+    }
+
+    render(<LyricGame initialSong={englishSong} songs={[englishSong]} />)
+
+    fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "l" } })
+    fireEvent.click(screen.getByRole("button", { name: "提交" }))
+    expect(screen.queryByText("Love")).not.toBeInTheDocument()
+    expect(screen.getByText("不在歌里的字").nextSibling).toHaveTextContent("l")
+
+    fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "love" } })
+    fireEvent.click(screen.getByRole("button", { name: "提交" }))
+    expect(screen.getByText("Love")).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText("输入要猜的字"), { target: { value: "story" } })
+    fireEvent.click(screen.getByRole("button", { name: "提交" }))
+    expect(screen.getByText("胜利")).toBeInTheDocument()
   })
 })

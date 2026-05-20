@@ -131,9 +131,10 @@ input {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  min-width: 32px;
   height: 36px;
   border-radius: 6px;
+  padding: 0 6px;
   font-size: 20px;
   line-height: 1;
 }
@@ -149,6 +150,19 @@ input {
   border: 1px solid #e0b943;
 }
 
+.puzzle-cell-hinted {
+  background: #b9e6ff;
+  border-color: #62b2df;
+}
+
+.puzzle-cell-last {
+  box-shadow: 0 0 0 3px #f06b3a;
+}
+
+.puzzle-cell-last-hinted {
+  box-shadow: 0 0 0 3px #2084c7;
+}
+
 .puzzle-cell-complete {
   background: #fff;
   color: #1c1f24;
@@ -156,7 +170,7 @@ input {
 }
 
 .puzzle-line-title .puzzle-cell {
-  width: 40px;
+  min-width: 40px;
   height: 44px;
   font-size: 24px;
   font-weight: 700;
