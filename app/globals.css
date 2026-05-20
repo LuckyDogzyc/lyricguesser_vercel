@@ -50,6 +50,10 @@ input {
   font-size: 28px;
 }
 
+.mobile-mode-toggle {
+  display: none;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -165,6 +169,10 @@ input {
 .guess-form {
   display: grid;
   gap: 10px;
+}
+
+.guess-actions {
+  display: grid;
 }
 
 .guess-form label {
@@ -291,13 +299,193 @@ input {
 }
 
 @media (max-width: 900px) {
-  .app-shell {
-    grid-template-columns: 1fr;
+  body {
+    height: 100dvh;
+    overflow: hidden;
   }
 
-  .side-nav,
-  .guess-panel {
+  .app-shell {
+    display: block;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .side-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    padding: 6px 10px;
+    background: rgba(255, 250, 241, 0.96);
     border: 0;
     border-bottom: 1px solid #e4dac9;
+  }
+
+  .side-nav h1 {
+    display: none;
+  }
+
+  .mobile-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    min-width: 58px;
+    border: 1px solid #d8ccba;
+    border-radius: 8px;
+    background: #fff;
+    color: #24262b;
+  }
+
+  .nav-items {
+    display: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .side-nav-open .nav-items {
+    display: grid;
+  }
+
+  .nav-item {
+    min-height: 32px;
+    margin: 0;
+    border-radius: 7px;
+    padding: 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .lyrics-panel {
+    height: 100dvh;
+    max-height: none;
+    padding: 48px 10px 104px;
+    overflow-y: auto;
+  }
+
+  .puzzle-line {
+    gap: 4px;
+    margin-bottom: 10px;
+    min-height: 30px;
+  }
+
+  .puzzle-line-title {
+    margin-bottom: 18px;
+  }
+
+  .puzzle-cell,
+  .puzzle-space {
+    width: 26px;
+    height: 30px;
+    border-radius: 5px;
+    font-size: 17px;
+  }
+
+  .puzzle-line-title .puzzle-cell {
+    width: 32px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .puzzle-space {
+    width: 10px;
+  }
+
+  .guess-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    display: grid;
+    gap: 6px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255, 250, 241, 0.98);
+    border: 0;
+    border-top: 1px solid #e4dac9;
+    box-shadow: 0 -8px 20px rgba(36, 38, 43, 0.08);
+  }
+
+  .guess-actions {
+    grid-template-columns: minmax(0, 1fr) 54px;
+    gap: 6px;
+  }
+
+  .guess-form {
+    grid-template-columns: minmax(0, 1fr) 54px;
+    gap: 6px;
+  }
+
+  .guess-form label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .guess-form input,
+  .guess-form button,
+  .hint-button {
+    min-height: 36px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .guess-form input {
+    min-width: 0;
+    padding: 0 10px;
+  }
+
+  .hint-button {
+    width: auto;
+    margin-top: 0;
+  }
+
+  .stats {
+    grid-template-columns: 70px 70px minmax(0, 1fr);
+    gap: 6px;
+    margin: 0;
+  }
+
+  .stats div {
+    min-width: 0;
+    padding: 6px 8px;
+    border-radius: 7px;
+  }
+
+  .stats dt {
+    margin-bottom: 2px;
+    font-size: 11px;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .stats dd {
+    min-height: 16px;
+    font-size: 13px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .victory {
+    display: none;
+  }
+
+  .artist-search {
+    top: 42px;
+  }
+
+  .artist-search input {
+    max-width: none;
+  }
+
+  .artist-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

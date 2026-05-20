@@ -19,6 +19,7 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
   const [input, setInput] = useState("")
   const [mode, setMode] = useState<"play" | "artists">("play")
   const [artistSearch, setArtistSearch] = useState("")
+  const [isNavOpen, setIsNavOpen] = useState(false)
   const puzzleLines = useMemo(() => getPuzzleLines(song), [song])
   const randomSongs = useMemo(() => getRandomEligibleSongs(songs), [songs])
   const artistCategories = useMemo(() => providedArtistCategories ?? getArtistCategories(songs), [providedArtistCategories, songs])
@@ -42,6 +43,7 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
     setState(createInitialGameState(next))
     setInput("")
     setMode("play")
+    setIsNavOpen(false)
   }
 
   function startRandomSong() {
@@ -67,6 +69,7 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
   function showArtistPicker() {
     setArtistSearch("")
     setMode("artists")
+    setIsNavOpen(false)
   }
 
   function revealHint() {
@@ -75,20 +78,30 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
 
   return (
     <main className="app-shell">
-      <aside className="side-nav" aria-label="模式">
+      <aside className={`side-nav ${isNavOpen ? "side-nav-open" : ""}`} aria-label="模式">
+        <button
+          aria-expanded={isNavOpen}
+          className="mobile-mode-toggle"
+          onClick={() => setIsNavOpen((current) => !current)}
+          type="button"
+        >
+          模式
+        </button>
         <h1>猜歌词</h1>
-        <button className="nav-item nav-item-active" onClick={startRandomSong} type="button">
-          随机
-        </button>
-        <button className="nav-item" disabled>
-          每日挑战
-        </button>
-        <button className="nav-item" onClick={showArtistPicker} type="button">
-          分类
-        </button>
-        <button className="nav-item" disabled>
-          登录
-        </button>
+        <div className="nav-items">
+          <button className="nav-item nav-item-active" onClick={startRandomSong} type="button">
+            随机
+          </button>
+          <button className="nav-item" disabled>
+            每日挑战
+          </button>
+          <button className="nav-item" onClick={showArtistPicker} type="button">
+            分类
+          </button>
+          <button className="nav-item" disabled>
+            登录
+          </button>
+        </div>
       </aside>
 
       <section className="lyrics-panel" aria-label="歌词谜面">
@@ -120,22 +133,25 @@ export function LyricGame({ initialSong, songs, artistCategories: providedArtist
       </section>
 
       <aside className="guess-panel" aria-label="猜测">
-        <form onSubmit={submitGuess} className="guess-form">
-          <label htmlFor="guess-input">输入要猜的字</label>
-          <input
-            autoComplete="off"
-            disabled={state.isSolved}
-            id="guess-input"
-            onChange={(event) => setInput(event.target.value)}
-            value={input}
-          />
-          <button type="submit" disabled={state.isSolved || input.trim().length === 0}>
-            提交
+        <div className="guess-actions">
+          <form onSubmit={submitGuess} className="guess-form">
+            <label htmlFor="guess-input">输入要猜的字</label>
+            <input
+              autoComplete="off"
+              disabled={state.isSolved}
+              id="guess-input"
+              onChange={(event) => setInput(event.target.value)}
+              placeholder="输入要猜的字"
+              value={input}
+            />
+            <button type="submit" disabled={state.isSolved || input.trim().length === 0}>
+              提交
+            </button>
+          </form>
+          <button className="hint-button" disabled={state.isSolved} onClick={revealHint} type="button">
+            提示
           </button>
-        </form>
-        <button className="hint-button" disabled={state.isSolved} onClick={revealHint} type="button">
-          提示
-        </button>
+        </div>
 
         <dl className="stats">
           <div>
